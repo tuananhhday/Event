@@ -1,0 +1,16 @@
+services:
+  - type: web
+    name: event-tracking-qa-web
+    runtime: static
+    buildCommand: echo ready
+    staticPublishPath: ./web/dist
+    envVars:
+      - key: SKIP_INSTALL_DEPS
+        value: "true"
+    headers:
+      - path: /*
+        name: X-Content-Type-Options
+        value: nosniff
+      - path: /*
+        name: Referrer-Policy
+        value: no-referrer

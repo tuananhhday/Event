@@ -1,0 +1,380 @@
+{
+  "source_repository": "https://github.com/tuananhhday/Event-Tracking",
+  "source_commit": "c98e0c88795cd07b15988e7de06fd39d80f25451",
+  "snapshot_date": "2026-10-30",
+  "target_repository": "https://github.com/tuananhhday/Event",
+  "original_file_count": 74,
+  "note": "All tracked files at source_commit were fetched and verified against Git blob SHA-1. README.md is updated to describe the web edition; web/, render.yaml and packaging guidance are additions. Git commit history and installed dependencies are not part of this source archive.",
+  "original_files": [
+    {
+      "path": ".env.example",
+      "git_blob_sha": "13162f6ae0485a5fb12ebcacfbbe98c24d5031cc",
+      "size": 426
+    },
+    {
+      "path": ".gitignore",
+      "git_blob_sha": "6ce168ccd653ee88bffc8f30cf72e071d3200ac4",
+      "size": 145
+    },
+    {
+      "path": "README.md",
+      "git_blob_sha": "29fc721cf356805e63d8130a151ee486ebcb6314",
+      "size": 17805
+    },
+    {
+      "path": "START_EVENT_QA.cmd",
+      "git_blob_sha": "bacd9e4bb00d0a5cf6414cb27a42a6779e808745",
+      "size": 969
+    },
+    {
+      "path": "STOP_EVENT_QA.cmd",
+      "git_blob_sha": "cdc830abf245620749c090c781342f417d018079",
+      "size": 73
+    },
+    {
+      "path": "deep-research-report.md",
+      "git_blob_sha": "775c39561afac12157e01427317a884073a95258",
+      "size": 33818
+    },
+    {
+      "path": "docs/AI_PROXY.md",
+      "git_blob_sha": "cc9797715a76d7b14aabef5bb56952c6c010a823",
+      "size": 10681
+    },
+    {
+      "path": "docs/CDP.md",
+      "git_blob_sha": "5c968eb014218c8a8cbeb2d35792460636cf9e03",
+      "size": 4578
+    },
+    {
+      "path": "docs/CONTRACT.md",
+      "git_blob_sha": "ee859ca319cacfcdb4ada0474752345946aa6155",
+      "size": 4031
+    },
+    {
+      "path": "docs/IMPLEMENTATION_STATUS.md",
+      "git_blob_sha": "7ce8e7a04a78eb5f18373db3f009ff1495a72ae2",
+      "size": 10401
+    },
+    {
+      "path": "docs/RULES.md",
+      "git_blob_sha": "4d00a87aab349518042af018de7c3cdf01b9fa67",
+      "size": 2595
+    },
+    {
+      "path": "examples/cases.json",
+      "git_blob_sha": "a3baa54977e33b913e560e31dfcf1f63fb5b857a",
+      "size": 2473
+    },
+    {
+      "path": "examples/contexts.json",
+      "git_blob_sha": "de6060f2ea228c25ac55c00cf999bcacfe012595",
+      "size": 230
+    },
+    {
+      "path": "package-lock.json",
+      "git_blob_sha": "0be77d2bce7af9f3acf4a42e82dbd20d90dde971",
+      "size": 96032
+    },
+    {
+      "path": "package.json",
+      "git_blob_sha": "46817188553b408411ee4d66957e8389b9c02667",
+      "size": 876
+    },
+    {
+      "path": "proxy/mitm_addon.py",
+      "git_blob_sha": "8ebb8065c5e60e2efb9ac64ae1f62055ea893566",
+      "size": 6275
+    },
+    {
+      "path": "proxy/requirements.txt",
+      "git_blob_sha": "3b03a2b929d217394bbf3a678318ab839d627b07",
+      "size": 90
+    },
+    {
+      "path": "scripts/ai-probe.mjs",
+      "git_blob_sha": "d0e076bcd660792da56a0b8df5b1eaede58ffdab",
+      "size": 1162
+    },
+    {
+      "path": "scripts/ai-smoke.mjs",
+      "git_blob_sha": "238f57eef5435ee3dc32bff5ecbd9391c1b83d65",
+      "size": 4524
+    },
+    {
+      "path": "scripts/check.mjs",
+      "git_blob_sha": "c3cb9d51a8426b29fcb86cfeba7f78f4a20e92b7",
+      "size": 868
+    },
+    {
+      "path": "scripts/local-smoke.mjs",
+      "git_blob_sha": "fb36eecc49882004e2b619e419c6f4584d302403",
+      "size": 7500
+    },
+    {
+      "path": "scripts/proxy-smoke.mjs",
+      "git_blob_sha": "7b924381badfffbdc345ab44e4e059d168803e4c",
+      "size": 8916
+    },
+    {
+      "path": "scripts/proxy-test-cert.py",
+      "git_blob_sha": "1c2f01b88ee8bedd36a5c50fcc46220f1f12cca4",
+      "size": 1566
+    },
+    {
+      "path": "scripts/stop-apps.mjs",
+      "git_blob_sha": "d29aec65ed9df9e9128bd3209c8ee2bac551a275",
+      "size": 2679
+    },
+    {
+      "path": "solutions/01-cdp-no-ai/README.md",
+      "git_blob_sha": "e8bbbe5946590f7cdbd3857400a7f90054d23f5c",
+      "size": 778
+    },
+    {
+      "path": "solutions/01-cdp-no-ai/start.cmd",
+      "git_blob_sha": "52604f6b7ddc1505e5c3c60adb93b69373310066",
+      "size": 124
+    },
+    {
+      "path": "solutions/02-cdp-ai/README.md",
+      "git_blob_sha": "793c421d2bfecd168a5f78868025f8b6c67cbf00",
+      "size": 1064
+    },
+    {
+      "path": "solutions/02-cdp-ai/start.cmd",
+      "git_blob_sha": "b7042c8711220e229a92e59b54aa29616420a0ef",
+      "size": 157
+    },
+    {
+      "path": "solutions/03-proxy-no-ai/README.md",
+      "git_blob_sha": "88e649ab4dadb243cfcb25188afcc9a9f6bf3ac0",
+      "size": 893
+    },
+    {
+      "path": "solutions/03-proxy-no-ai/start.cmd",
+      "git_blob_sha": "c32dec4fff175b5aeef129675b4c3ecf78bcfc38",
+      "size": 128
+    },
+    {
+      "path": "src/ai/openrouter.mjs",
+      "git_blob_sha": "d476dc28c295af83eb3e474db6d51cc8cece90ca",
+      "size": 25497
+    },
+    {
+      "path": "src/ai/routing.mjs",
+      "git_blob_sha": "7cbda4afa6fb5bdc9edc5b482afcfde9144e2668",
+      "size": 4913
+    },
+    {
+      "path": "src/browser/launcher.mjs",
+      "git_blob_sha": "f0ade1dc4b27fd14ead804e4891e28114294072f",
+      "size": 8342
+    },
+    {
+      "path": "src/cli.mjs",
+      "git_blob_sha": "16f0284745310361da857be4a81ef84340b8975c",
+      "size": 4148
+    },
+    {
+      "path": "src/collectors/cdp.mjs",
+      "git_blob_sha": "88c027e07e6c5e38580c6628b19e2f746f2834bf",
+      "size": 22834
+    },
+    {
+      "path": "src/collectors/inject.js",
+      "git_blob_sha": "7ef9a0ea59b6c1db206a6302accb0ac7ca6cf79f",
+      "size": 6198
+    },
+    {
+      "path": "src/collectors/proxy.mjs",
+      "git_blob_sha": "413c17770de46da84aa8c59b4e95cf90b6f3d888",
+      "size": 11086
+    },
+    {
+      "path": "src/core/catalog.mjs",
+      "git_blob_sha": "516e0ce25dd0ac2245472f38c807f6db5079cb30",
+      "size": 7048
+    },
+    {
+      "path": "src/core/decoder.mjs",
+      "git_blob_sha": "c073edd8880142c35b36553d2cde6e4889bcb07d",
+      "size": 6993
+    },
+    {
+      "path": "src/core/firing.mjs",
+      "git_blob_sha": "0c3b4dd1c561b49adde35d5626f11f74bf27d469",
+      "size": 12642
+    },
+    {
+      "path": "src/core/privacy.mjs",
+      "git_blob_sha": "d0d1d81e51914b42f561fdbe680ab1a9345d2077",
+      "size": 3064
+    },
+    {
+      "path": "src/core/rules.mjs",
+      "git_blob_sha": "7262eb192797653eed1be5be77a4dff29b6660af",
+      "size": 11835
+    },
+    {
+      "path": "src/core/session.mjs",
+      "git_blob_sha": "705396c970e3d4754f007a86f09cf9dc0dcfc937",
+      "size": 6355
+    },
+    {
+      "path": "src/core/store.mjs",
+      "git_blob_sha": "db2b2a4d8c67cfb6d53ad79bb44395aebc36d679",
+      "size": 3807
+    },
+    {
+      "path": "src/demo.mjs",
+      "git_blob_sha": "81fcad792a7325357dbc6f248b656a3b55df40dc",
+      "size": 2036
+    },
+    {
+      "path": "src/report/export.mjs",
+      "git_blob_sha": "ffc95ac61fe24c5fde41387c422ccff7003542f5",
+      "size": 14052
+    },
+    {
+      "path": "src/server.mjs",
+      "git_blob_sha": "e9b5a9209c422671075f18669680bee627f9c754",
+      "size": 29219
+    },
+    {
+      "path": "src/spec/import.mjs",
+      "git_blob_sha": "345fd2216ded72d5ebe86f4f306c13786ebc3b58",
+      "size": 15339
+    },
+    {
+      "path": "src/spec/sanitize.mjs",
+      "git_blob_sha": "850b3e5b77b58b59d13aa8a952cb9552073b1044",
+      "size": 1214
+    },
+    {
+      "path": "src/web/cdp-ai.html",
+      "git_blob_sha": "a1de229a3e84961b76ac078c0e5278d208ddd953",
+      "size": 28547
+    },
+    {
+      "path": "src/web/cdp.html",
+      "git_blob_sha": "feeea55b061222c1fac47f5b5a137d168a856eec",
+      "size": 18526
+    },
+    {
+      "path": "src/web/demo.html",
+      "git_blob_sha": "d26c2659c411fe410a84c29f301d4943e1cbb4f6",
+      "size": 3384
+    },
+    {
+      "path": "src/web/proxy.html",
+      "git_blob_sha": "1006c3674cc47c51770fc207511cbba1bd8a2cf2",
+      "size": 19638
+    },
+    {
+      "path": "src/web/shared/eventqa.css",
+      "git_blob_sha": "8f699ce74bd4ea4c41e689b7f3c5ca916a43640e",
+      "size": 22196
+    },
+    {
+      "path": "src/web/shared/eventqa.js",
+      "git_blob_sha": "a92a058475152fb99115376e4429fa890cc025b1",
+      "size": 78137
+    },
+    {
+      "path": "test/rules.test.mjs",
+      "git_blob_sha": "d0c8865af13b2b439aa5f0a6517e39725f1ef92e",
+      "size": 9516
+    },
+    {
+      "path": "test/spec-report.test.mjs",
+      "git_blob_sha": "7fb17e8482441602c76da896637f46b8759f54d0",
+      "size": 7507
+    },
+    {
+      "path": "tests/ai-cancel.test.mjs",
+      "git_blob_sha": "a47b547d9a4def8dad45e52f93fd64d01a2e925f",
+      "size": 5080
+    },
+    {
+      "path": "tests/ai-routing-review.test.mjs",
+      "git_blob_sha": "5923850519fec324e0479064199467828abae438",
+      "size": 15420
+    },
+    {
+      "path": "tests/ai.test.mjs",
+      "git_blob_sha": "22d1021e9b76d961b5c12b5d498f1972e3751e91",
+      "size": 9694
+    },
+    {
+      "path": "tests/cdp-browser-close.test.mjs",
+      "git_blob_sha": "ed1c17ab0943b3e5fe1dd9303d020696962b6a6f",
+      "size": 5247
+    },
+    {
+      "path": "tests/cdp-connection.test.mjs",
+      "git_blob_sha": "6a102373a58be39542f9d8d64735571a0198e1e0",
+      "size": 11835
+    },
+    {
+      "path": "tests/cdp-injection.test.mjs",
+      "git_blob_sha": "5fcee79498633bc3cbdfc579f8a162da64356c9d",
+      "size": 5151
+    },
+    {
+      "path": "tests/cdp-live.test.mjs",
+      "git_blob_sha": "d3416a7ace52621b74725a4f758338197327be1c",
+      "size": 4611
+    },
+    {
+      "path": "tests/core-integration.test.mjs",
+      "git_blob_sha": "5e5578fc4b2aaf40a8838dabe6e6e8be0c8f9c7a",
+      "size": 19218
+    },
+    {
+      "path": "tests/decoder-vendors.test.mjs",
+      "git_blob_sha": "83d4c847d9488ce99644958883ce4f866f342fe1",
+      "size": 3219
+    },
+    {
+      "path": "tests/firing.test.mjs",
+      "git_blob_sha": "85dd993dc3d165ea69c6cd8159bc7d8844045bf1",
+      "size": 5293
+    },
+    {
+      "path": "tests/proxy.test.mjs",
+      "git_blob_sha": "ce4716b1e5c66f0b25b2a1fc99fe85c38a1dd6aa",
+      "size": 4644
+    },
+    {
+      "path": "tests/proxy_addon_test.py",
+      "git_blob_sha": "7750f934fb4e24433c2f4330b86f67df5dca9463",
+      "size": 5256
+    },
+    {
+      "path": "tests/server-ai.test.mjs",
+      "git_blob_sha": "61625c7e6c924fd670c92fdcafa0555465fb48bb",
+      "size": 3942
+    },
+    {
+      "path": "tests/shutdown.test.mjs",
+      "git_blob_sha": "3ead7cdcf37edae3be71db004cf8b890ff3baedf",
+      "size": 9496
+    },
+    {
+      "path": "tests/spec-catalog.test.mjs",
+      "git_blob_sha": "5c3896e527930b4a5bff8b8cae67a67e9498873d",
+      "size": 5286
+    },
+    {
+      "path": "tests/web-real.test.mjs",
+      "git_blob_sha": "a6321ea1f0cac0e3c46a00af92a3f02d19936c1a",
+      "size": 4415
+    },
+    {
+      "path": "tests/web-ui.test.mjs",
+      "git_blob_sha": "b40324afebac32017ba0226e62a5d4c292e00149",
+      "size": 3268
+    }
+  ]
+}

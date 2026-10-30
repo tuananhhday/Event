@@ -1,0 +1,11 @@
+{
+  "name": "event-tracking-qa-web",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Browser-local HAR and Excel event tracking QA. No runtime dependencies.",
+  "scripts": {
+    "test": "node --test tests/core.test.mjs",
+    "bundle": "node scripts/bundle.mjs"
+  }
+}
