@@ -8,3 +8,39 @@
 .button{font-size:13px;min-height:40px}.mode strong{font-size:13px}.event-tools input,.event-tools select,.comparison-actions select{font-size:12px}.event-row strong{font-size:13px}.empty-events p{color:#637b9c}.screen-empty p{color:#637b9c}.screen-empty h2{color:#435e82}.drawer-body p,.drawer-body li{color:#506888;font-size:13px}.detail-grid span{color:#506888}td{color:#587195}.notice.warning{color:#806722}.notice.error{color:#a94450}
 .browser:fullscreen{border:0;border-radius:0;background:#fff;display:flex;flex-direction:column}.browser:fullscreen .screen{flex:1;aspect-ratio:auto;min-height:0}.browser:fullscreen .screen img{object-fit:contain}.browser:fullscreen .browser-foot{margin-top:0}.browser:fullscreen .browser-toolbar{flex-shrink:0}
 @media(max-width:520px){.button{font-size:11px}.event-row strong{font-size:12px}.mode strong{font-size:12px}}
+
+/* Give the interactive browser most of the workspace. */
+main{max-width:none;padding:28px 24px}
+.workbench{grid-template-columns:minmax(0,1fr) 320px;gap:16px;align-items:start}
+.browser{min-width:0;scroll-margin-top:16px}
+.browser-toolbar{height:auto;min-height:62px;padding:10px;gap:6px;flex-wrap:wrap}
+.browser-toolbar>button{min-height:38px;min-width:38px;padding:8px 10px;color:#334d73;font-size:13px;white-space:nowrap;border-radius:6px}
+.browser-toolbar>button:hover:not(:disabled){background:#e9efff}
+.browser-toolbar #navigate{flex:1;min-width:180px}
+.browser-toolbar #address{font-size:14px;color:#233f68}
+.screen{min-height:0;background:#dfe6f0}
+.screen:focus-visible{outline:3px solid #315cf4;outline-offset:-3px}
+.typing-bar{padding:12px;gap:10px}
+.typing-bar input{font-size:14px;color:#233f68}
+.typing-bar .button{font-size:12px}
+.browser-foot{padding:12px 14px;font-size:12px;line-height:1.6}
+#refresh-frame{font-size:12px;font-weight:600;color:#315cf4;white-space:nowrap;min-height:36px;padding:6px 10px}
+.workbench.expanded{grid-template-columns:minmax(0,1fr)}
+.workbench.expanded .events{min-height:0;max-height:440px}
+.workbench.expanded .event-list{height:220px;flex:auto}
+#wide-screen[aria-pressed=true]{background:#e9efff;color:#2449d0}
+@media(max-width:1100px){
+ .workbench{grid-template-columns:minmax(0,1fr)}
+ .events{min-height:0;max-height:460px}
+ .event-list{height:260px;flex:auto}
+}
+@media(max-width:600px){
+ main{padding:20px 12px}
+ .browser-toolbar #navigate{order:-1;flex-basis:100%;min-width:0}
+ .browser-toolbar>button{font-size:12px;padding:6px 8px}
+ #expand-screen span{display:none}
+ .typing-bar{flex-wrap:wrap;padding:9px}
+ .typing-bar input{flex:1;min-width:150px;font-size:13px}
+ .typing-bar .button{margin-left:auto}
+ .browser-foot{flex-wrap:wrap;font-size:11px}
+}

@@ -34,11 +34,12 @@ export class RemoteBrowser{
    this.control=new CDPConnection(target.webSocketDebuggerUrl);await this.control.connect();
    this.control.on('event',m=>void this.protocolEvent(m).catch(e=>this.emit('log',{message:e.message})));
    await this.control.send('Page.enable');await this.control.send('Runtime.enable');
-   await this.control.send('Emulation.setDeviceMetricsOverride',{width:1280,height:800,deviceScaleFactor:1,mobile:false});
+   // Keep pointer coordinates in CSS pixels while capturing denser screenshots.
+   await this.control.send('Emulation.setDeviceMetricsOverride',{width:1280,height:800,deviceScaleFactor:1.5,mobile:false});
    await this.control.send('Fetch.enable',{patterns:[{urlPattern:'*',requestStage:'Request'}]});
    await this.control.send('Page.setInterceptFileChooserDialog',{enabled:true});
    if(this.mode!=='proxy'){this.collector=new CDPCollector({port:this.port,endpointPatterns:this.patterns,onEvent:e=>this.emit('event',redact(e)),onStatus:message=>this.emit('log',{message})});await this.collector.start();}
-   await this.control.send('Page.startScreencast',{format:'jpeg',quality:65,maxWidth:1280,maxHeight:800,everyNthFrame:1});
+   await this.control.send('Page.startScreencast',{format:'jpeg',quality:85,maxWidth:1920,maxHeight:1200,everyNthFrame:1});
    this.child.once('exit',()=>{if(!this.closed)this.emit('browserClosed',{});});
    this.metaTimer=setInterval(()=>void this.updateMeta(),1500);await this.updateMeta();
   }catch(e){await this.stop();throw e;}
@@ -63,7 +64,7 @@ export class RemoteBrowser{
   // Retry only that transient error; a dead browser or other CDP failure must surface.
   const deadline=Date.now()+5000;
   while(!this.closed){
-   try{const r=await this.control.send('Page.captureScreenshot',{format:'jpeg',quality:65,captureBeyondViewport:false});return{data:r.data,width:1280,height:800};}
+   try{const r=await this.control.send('Page.captureScreenshot',{format:'jpeg',quality:85,captureBeyondViewport:false});return{data:r.data,width:1280,height:800};}
    catch(error){if(!/Not attached to an active page/.test(error.message)||Date.now()>=deadline)throw error;await delay(100);}
   }
   throw new Error('Phiên trình duyệt đã kết thúc.');
@@ -91,7 +92,7 @@ export class RemoteBrowser{
    await c.send('Input.dispatchMouseEvent',{type:'mousePressed',button:'left',buttons:1,clickCount:a.count===2?2:1,x,y});return c.send('Input.dispatchMouseEvent',{type:'mouseReleased',button:'left',buttons:0,clickCount:a.count===2?2:1,x,y});
   }
   if(a.type==='dialog')return c.send('Page.handleJavaScriptDialog',{accept:!!a.accept,promptText:String(a.text??'').slice(0,1000)});
-  if(a.type==='tab'){const target=(await listTargets(this.port)).find(t=>t.id===a.id);if(!target)throw new Error('Tab không còn tồn tại.');await this.validateURL(target.url);await c.send('Page.stopScreencast').catch(()=>{});c.close();this.control=new CDPConnection(target.webSocketDebuggerUrl);await this.control.connect();this.control.on('event',m=>void this.protocolEvent(m).catch(()=>{}));await this.control.send('Page.enable');await this.control.send('Runtime.enable');await this.control.send('Fetch.enable',{patterns:[{urlPattern:'*',requestStage:'Request'}]});await this.control.send('Emulation.setDeviceMetricsOverride',{width:1280,height:800,deviceScaleFactor:1,mobile:false});await this.control.send('Page.startScreencast',{format:'jpeg',quality:65,maxWidth:1280,maxHeight:800});return;}
+  if(a.type==='tab'){const target=(await listTargets(this.port)).find(t=>t.id===a.id);if(!target)throw new Error('Tab không còn tồn tại.');await this.validateURL(target.url);await c.send('Page.stopScreencast').catch(()=>{});c.close();this.control=new CDPConnection(target.webSocketDebuggerUrl);await this.control.connect();this.control.on('event',m=>void this.protocolEvent(m).catch(()=>{}));await this.control.send('Page.enable');await this.control.send('Runtime.enable');await this.control.send('Fetch.enable',{patterns:[{urlPattern:'*',requestStage:'Request'}]});await this.control.send('Emulation.setDeviceMetricsOverride',{width:1280,height:800,deviceScaleFactor:1.5,mobile:false});await this.control.send('Page.startScreencast',{format:'jpeg',quality:85,maxWidth:1920,maxHeight:1200});return;}
   throw new Error('Thao tác không được hỗ trợ.');
  }
  async tabs(){return(await listTargets(this.port)).map(t=>({id:t.id,title:String(redact(t.title)),url:redactUrl(t.url)}));}

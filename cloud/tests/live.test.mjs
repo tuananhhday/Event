@@ -6,7 +6,7 @@ import {compare,specFromRows} from '../../web/dist/core.mjs';
 class FakeBrowser{
  constructor(opts){this.opts=opts;this.lastMeta={url:'https://example.com',title:'test'};}
  async start(){this.opts.emit('event',{event_name:'search_submit',source:'GA4',layer:'JS_QUEUE',payload:{event:'search_submit',search_term:'hotel'},captured_at:new Date().toISOString()});}
- async navigate(){} async frame(){return{data:'',width:1280,height:800};} async stop(){this.stopped=true;}async action(d){this.lastAction=d;}async tabs(){return[{id:'a',title:'test',url:'https://example.com'}];}
+ async navigate(){} async frame(){return{data:'test-jpeg',width:1280,height:800};} async stop(){this.stopped=true;}async action(d){this.lastAction=d;}async tabs(){return[{id:'a',title:'test',url:'https://example.com'}];}
 }
 async function fixture(options={}){const app=createCloudApp({Browser:FakeBrowser,...options});await new Promise(r=>app.server.listen(0,'127.0.0.1',r));const origin=`http://127.0.0.1:${app.server.address().port}`;let cookie='';return{app,origin,async request(route,data,{newOwner=false,originOverride}={}){const res=await fetch(origin+'/api/'+route,{method:data===undefined?'GET':'POST',headers:{...(cookie&&!newOwner?{Cookie:cookie}:{}),...(data!==undefined?{'Content-Type':'application/json',Origin:originOverride??origin}:{})},...(data===undefined?{}:{body:JSON.stringify(data)})});const set=res.headers.get('set-cookie');if(set&&!newOwner)cookie=set.split(';')[0];return{status:res.status,data:await res.json()};},close:()=>app.close()};}
 test('session lifecycle uses owned browser, retains evidence after stop',async()=>{const f=await fixture();try{await f.request('capabilities');const start=await f.request('start',{mode:'cdp',demo:true});assert.equal(start.status,200);assert.equal(start.data.active,true);assert.equal(start.data.events.length,1);const mark=await f.request('mark',{name:'search'});assert.equal(mark.data.eventIndex,1);const action=await f.request('action',{type:'click',x:10,y:20});assert.equal(action.status,200);const stop=await f.request('stop',{});assert.equal(stop.data.active,false);assert.equal(stop.data.events.length,1);}finally{await f.close();}});
@@ -34,3 +34,19 @@ test('static pages are available and traversal is rejected',async()=>{const f=aw
  assert.equal((await fetch(f.origin+'/offline/%2e%2e%2fpackage.json')).status,404);
  assert.equal((await fetch(f.origin+'/health')).status,200);
  }finally{await f.close();}});
+
+// Recovery must not depend on an EventSource already being connected.
+test('start and refresh return the owner image directly without an SSE stream',async()=>{
+ const f=await fixture();
+ try{
+  const start=await f.request('start',{mode:'cdp',demo:true});
+  assert.deepEqual(start.data.frame,{data:'test-jpeg',width:1280,height:800});
+  assert.equal([...f.app.owners.values()][0].streams.size,0);
+  const frame=await f.request('frame',{});
+  assert.equal(frame.status,200);assert.deepEqual(frame.data.frame,start.data.frame);
+  const other=await f.request('frame',{},{newOwner:true});
+  assert.notEqual(other.status,200);assert.equal(other.data.frame,undefined);
+  await f.request('stop',{});
+  assert.notEqual((await f.request('frame',{})).status,200);
+ }finally{await f.close();}
+});

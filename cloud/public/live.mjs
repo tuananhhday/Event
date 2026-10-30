@@ -14,7 +14,7 @@ function updateControls(){
  const running=state.active,busy=state.starting;
  $('#start').disabled=running||busy||!state.cap?.browser;$('#start').textContent=busy?'Đang mở trình duyệt…':running?'Phiên đang chạy':'Mở trình duyệt test →';
  $('#stop').disabled=!running||busy;$('#mark').disabled=!running;$('#export').disabled=!state.events.length;
- for(const id of ['back','forward','reload','tabs','expand-screen','address','type-text','refresh-frame'])$('#'+id).disabled=!running;
+ for(const id of ['back','forward','reload','tabs','expand-screen','wide-screen','address','type-text','refresh-frame'])$('#'+id).disabled=!running;
  $('#navigate button').disabled=!running;$('#type-form button').disabled=!running;
  $('#setup').hidden=running;
  $('#session-title').textContent=busy?'Đang mở trình duyệt test…':running?'Đang thu thập event trực tiếp':state.started?'Phiên đã kết thúc':'Chưa mở phiên kiểm thử';
@@ -45,14 +45,28 @@ function renderSpec(){
  $('#comparison-results').innerHTML=`<div class="results-summary">${['PASS','FAIL','MISSING','REVIEW','EXTRA'].map(k=>`<span class="result-pill ${k}">${state.rows.filter(r=>r.status===k).length} ${label[k]}</span>`).join('')}</div>${state.specs.some(s=>s.inferred)?'<div class="notice" style="margin:12px 20px">Sample Excel kiểm tra cấu trúc và kiểu dữ liệu. Giá trị ví dụ không tự trở thành giá trị bắt buộc. “Chưa thấy” cần xác nhận đã thực hiện đúng thao tác.</div>':''}<div class="table-wrap"><table><thead><tr><th>EVENT</th><th>NỀN TẢNG</th><th>ĐÃ THẤY</th><th>KẾT QUẢ</th></tr></thead><tbody>${state.rows.slice(0,300).map((r,i)=>`<tr data-result="${i}" tabindex="0"><td>${h(r.name)}<small>${h(r.flow||'')}</small></td><td>${h(r.vendor)}</td><td>${r.matches}</td><td><span class="result-pill ${r.status}">${label[r.status]}</span></td></tr>`).join('')}</tbody></table></div>`;
 }
 let renderTimer;function schedule(){if(renderTimer)return;renderTimer=setTimeout(()=>{renderTimer=null;renderEvents();renderSpec();updateControls();},150);}
-function applySnapshot(s){state.active=s.active;state.starting=s.starting;state.mode=s.mode??selectedMode();state.events=s.events??[];state.logs=s.logs??[];state.marks=s.marks??[];state.started=s.started;if(s.page)applyPage(s.page);renderEvents();renderLogs();renderSpec();updateControls();}
+function applySnapshot(s){if(s.frame)showFrame(s.frame);state.active=s.active;state.starting=s.starting;state.mode=s.mode??selectedMode();state.events=s.events??[];state.logs=s.logs??[];state.marks=s.marks??[];state.started=s.started;if(s.page)applyPage(s.page);renderEvents();renderLogs();renderSpec();updateControls();}
 function applyPage(p){if(document.activeElement!==$('#address'))$('#address').value=p.url==='about:blank'?'':p.url;$('#page-title').textContent=p.title||'Trình duyệt chạy trên máy chủ, phiên riêng của bạn.';}
 function showEvent(id){const e=state.events.find(x=>x.id===id);if(!e)return;state.selected=e;drawer(e.name,`${e.vendor} · ${e.layer==='JS_QUEUE'?'JS queue':'Tracking request'} · ${e.id}`,`<div class="detail-grid">${[['Thời gian',time(e.time)],['HTTP',e.layer==='JS_QUEUE'?'Không áp dụng':e.status??'Chờ phản hồi'],['Nguồn',e.endpoint],['Trang',e.page||'—']].map(([k,v])=>`<div><label>${k}</label><span>${h(v)}</span></div>`).join('')}</div>${e.historical?'<div class="notice">Đây là event lịch sử đã có trong queue khi bộ thu gắn vào trang.</div>':''}<h3>Payload đã thu</h3><pre>${h(JSON.stringify(e.payload,null,2))}</pre>${e.network?.error?`<div class="notice error">${h(e.network.error)}</div>`:''}<p>JS queue chứng minh SDK/dataLayer có dữ liệu. Request chứng minh đã có thao tác gửi mạng; HTTP thành công chưa xác nhận vendor ingestion.</p>`,`<button class="button" data-close>Đóng</button><button class="button primary" id="copy-event">Sao chép JSON</button>`);}
 function showResult(i){const r=state.rows[i];if(!r)return;drawer(r.name,`${label[r.status]} · ${r.vendor}`,`${r.issues.length?`<div class="notice ${r.status==='FAIL'?'error':'warning'}">${r.issues.map(h).join('<br>')}</div>`:''}<p>Đã thấy ${r.matches} event. ${r.inferred?'Kiểm cấu trúc từ sample.':'Đối chiếu rule trong JSON.'}</p>${r.checks.slice(0,200).map(c=>`<div class="check"><strong>${label[c.status]??c.status}</strong> · <code>${h(c.path)}</code><br>Kỳ vọng: ${h(c.expected)}<br>Thực tế: ${h(typeof c.actual==='object'?JSON.stringify(c.actual):String(c.actual))}<br>${h(c.eventId)}</div>`).join('')}<h3>Bằng chứng</h3>${r.eventIds.slice(0,20).map(id=>`<p><button class="button small" data-event="${h(id)}">${h(id)} ↗</button></p>`).join('')||'<p>Chưa có event bằng chứng.</p>'}`);}
+let lastFrameAt=0,framePending=false;
+function showFrame(frame){
+ if(!frame?.data)return;
+ lastFrameAt=Date.now();
+ $('#frame').src='data:image/jpeg;base64,'+frame.data;$('#frame').hidden=false;$('#screen-empty').hidden=true;
+}
+async function refreshFrame(){
+ if(!state.active||framePending)return;
+ framePending=true;
+ try{const result=await api('frame',{});if(state.active)showFrame(result.frame);}
+ finally{framePending=false;}
+}
+// SSE is preferred; HTTP also works when a proxy buffers or drops image events.
+setInterval(()=>{if(state.active&&!document.hidden&&Date.now()-lastFrameAt>2000)void refreshFrame().catch(e=>notice('Không nhận được hình trình duyệt: '+e.message,'error'));},1000);
 function connectStream(){state.stream?.close();const stream=new EventSource('/api/stream');state.stream=stream;
- stream.onopen=()=>{$('#connection').classList.add('online');$('#connection').textContent='Đã kết nối máy chủ';if(state.reconnect){state.reconnect=false;void api('state').then(applySnapshot).catch(e=>notice(e.message,'error'));}};
+ stream.onopen=()=>{$('#connection').classList.add('online');$('#connection').textContent='Đã kết nối máy chủ';if(state.reconnect){state.reconnect=false;void api('state').then(s=>{applySnapshot(s);return refreshFrame();}).catch(e=>notice(e.message,'error'));}};
  stream.onerror=()=>{state.reconnect=true;$('#connection').classList.remove('online');$('#connection').textContent='Đang kết nối lại…';};
- stream.addEventListener('frame',e=>{const d=JSON.parse(e.data);$('#frame').src='data:image/jpeg;base64,'+d.data;$('#frame').hidden=false;$('#screen-empty').hidden=true;});
+ stream.addEventListener('frame',e=>showFrame(JSON.parse(e.data)));
  stream.addEventListener('page',e=>applyPage(JSON.parse(e.data)));
  stream.addEventListener('event',e=>{const d=JSON.parse(e.data);if(!state.events.some(x=>x.id===d.id))state.events.push(d);schedule();});
  stream.addEventListener('event-update',e=>{const d=JSON.parse(e.data),i=state.events.findIndex(x=>x.id===d.id);if(i>=0)state.events[i]=d;schedule();});
@@ -62,23 +76,30 @@ function connectStream(){state.stream?.close();const stream=new EventSource('/ap
  stream.addEventListener('dialog',e=>{const d=JSON.parse(e.data);drawer('Website đang yêu cầu xác nhận',d.type,`<p>${h(d.message)}</p>${d.type==='prompt'?`<input class="text" id="dialog-text" value="${h(d.defaultPrompt)}">`:''}`,`<button class="button" id="dialog-cancel">Hủy</button><button class="button primary" id="dialog-accept">Đồng ý</button>`);});
  stream.addEventListener('started',e=>{const d=JSON.parse(e.data);state.active=true;state.starting=false;state.started=d.started;state.mode=d.mode;updateControls();});
 }
-async function init(){try{state.cap=await api('capabilities');if(state.cap.needsLogin){drawer('Mã truy cập công cụ','Mã do quản trị viên của bạn cung cấp.','<p>Nhập mã để mở các phiên trình duyệt test trên máy chủ này.</p><input id="access-code" class="text" type="password" autocomplete="current-password">','<button class="button primary" id="login">Vào công cụ</button>');return;}const s=await api('state');applySnapshot(s);connectStream();if(s.active)await api('frame',{});if(!state.cap.browser)notice('Giao diện đã sẵn sàng nhưng máy chủ này chưa có Chromium. Để mở website và thu event trực tiếp, deploy gói này dưới dạng Docker Web Service theo README_LIVE.md.','warning');else if(state.cap.allowedHosts.length)notice('Website được phép kiểm thử: '+state.cap.allowedHosts.join(', '));updateControls();}catch(e){notice(e.message,'error');$('#connection').textContent='Chưa kết nối được backend';}}
+async function init(){try{state.cap=await api('capabilities');if(state.cap.needsLogin){drawer('Mã truy cập công cụ','Mã do quản trị viên của bạn cung cấp.','<p>Nhập mã để mở các phiên trình duyệt test trên máy chủ này.</p><input id="access-code" class="text" type="password" autocomplete="current-password">','<button class="button primary" id="login">Vào công cụ</button>');return;}const s=await api('state');applySnapshot(s);connectStream();if(s.active)await refreshFrame();if(!state.cap.browser)notice('Giao diện đã sẵn sàng nhưng máy chủ này chưa có Chromium. Để mở website và thu event trực tiếp, deploy gói này dưới dạng Docker Web Service theo README_LIVE.md.','warning');else if(state.cap.allowedHosts.length)notice('Website được phép kiểm thử: '+state.cap.allowedHosts.join(', '));updateControls();}catch(e){notice(e.message,'error');$('#connection').textContent='Chưa kết nối được backend';}}
 async function start(demo=false){
  if(state.active||state.starting)return;
  if(state.events.length&&!window.confirm('Mở phiên mới sẽ thay dữ liệu phiên trước. Bạn đã xuất báo cáo cần giữ chưa?'))return;
  const mode=selectedMode(),url=$('#url').value.trim();if(!demo&&!url){$('#url').focus();toast('Nhập URL website cần kiểm tra.');return;}
- state.starting=true;state.events=[];state.logs=[];state.marks=[];$('#since-mark').checked=false;$('#mark-name').textContent='';$('#frame').hidden=true;$('#screen-empty').hidden=false;notice('');renderEvents();updateControls();
+ lastFrameAt=0;state.starting=true;state.events=[];state.logs=[];state.marks=[];$('#since-mark').checked=false;$('#mark-name').textContent='';$('#frame').hidden=true;$('#screen-empty').hidden=false;notice('');renderEvents();updateControls();
  try{const result=await api('start',{url,demo,mode,vendors:[...document.querySelectorAll('.vendor-options input:checked')].map(x=>x.value)});applySnapshot(result);if(mode==='proxy')$('#check-layer').value='TRACKING_REQUEST';else $('#check-layer').value='JS_QUEUE';renderSpec();toast('Trình duyệt đã mở. Bạn có thể thao tác trên màn hình website.');}catch(e){state.starting=false;state.active=false;updateControls();notice(e.message,'error');}
 }
-let inputChain=Promise.resolve();function input(action){inputChain=inputChain.catch(()=>{}).then(()=>api('action',action)).catch(e=>toast(e.message));return inputChain;}
+let inputChain=Promise.resolve();function input(action){inputChain=inputChain.catch(()=>{}).then(async()=>{await api('action',action);if(Date.now()-lastFrameAt>500)await refreshFrame();}).catch(e=>toast(e.message));return inputChain;}
 $('#start').onclick=()=>void start(false);$('#demo').onclick=$('#screen-demo').onclick=()=>void start(true);
 $('#stop').onclick=()=>{drawer('Kết thúc phiên kiểm thử?','Event sẽ được giữ để bạn xem và xuất báo cáo.','<p>Trình duyệt test và phiên đăng nhập tạm sẽ được đóng. Bạn có thể mở phiên mới sau đó.</p>','<button class="button" data-close>Tiếp tục test</button><button id="confirm-stop" class="button danger">Kết thúc phiên</button>');};
 $('#mark').onclick=()=>drawer('Đặt mốc thao tác','Ví dụ: Tìm khách sạn, chọn sản phẩm hoặc bắt đầu thanh toán.','<p>Đặt mốc trước khi thao tác để chỉ đối chiếu các event phát ra sau mốc đó.</p><input class="text" id="mark-input" maxlength="100" placeholder="Tên thao tác">','<button class="button" data-close>Hủy</button><button class="button primary" id="save-mark">Đặt mốc</button>');
 $('#navigate').onsubmit=e=>{e.preventDefault();void input({type:'navigate',url:$('#address').value.trim()});};
 for(const id of ['back','forward','reload'])$('#'+id).onclick=()=>void input({type:id});
-$('#refresh-frame').onclick=()=>void api('frame',{}).catch(e=>toast(e.message));
+$('#refresh-frame').onclick=()=>void refreshFrame().catch(e=>toast(e.message));
 $('#type-form').onsubmit=e=>{e.preventDefault();const text=$('#type-text').value;if(!text)return;void input({type:'text',text});$('#type-text').value='';$('#screen').focus();};
 const coords=e=>{const r=$('#frame').getBoundingClientRect(),scale=Math.min(r.width/1280,r.height/800),left=r.left+(r.width-1280*scale)/2,top=r.top+(r.height-800*scale)/2;return{x:Math.round((e.clientX-left)/scale),y:Math.round((e.clientY-top)/scale)};};
+$('#wide-screen').onclick=()=>{
+ const wide=$('#workbench').classList.toggle('expanded');
+ $('#wide-screen').setAttribute('aria-pressed',String(wide));
+ $('#wide-screen').textContent=wide?'↔ Thu gọn':'↔ Mở rộng';
+ $('#wide-screen').title=wide?'Đặt event bên cạnh màn hình':'Mở rộng màn hình, đưa event xuống dưới';
+ $('#browser-panel').scrollIntoView({block:'start'});
+};
 $('#expand-screen').onclick=()=>{const p=document.querySelector('.browser');void(document.fullscreenElement?document.exitFullscreen():p.requestFullscreen()).catch(()=>toast('Trình duyệt này chưa cho phép phóng to. Bạn có thể tăng zoom của trang.'));};
 $('#frame').onclick=e=>{if(state.active){$('#screen').focus();void input({type:'click',...coords(e)});}};
 let pointerBusy=false;$('#frame').onmousemove=e=>{if(!state.active||pointerBusy)return;pointerBusy=true;void api('action',{type:'pointer',...coords(e)}).catch(()=>{}).finally(()=>{pointerBusy=false;});};

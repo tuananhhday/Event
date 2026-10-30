@@ -77,7 +77,7 @@ export function createCloudApp({Browser=RemoteBrowser,maxSessions=limit(process.
      }else if(type==='browserClosed'){void stop(owner,'Trình duyệt đã đóng. Bạn có thể xuất dữ liệu hoặc mở phiên mới.');}
      else emit(owner,type,data);
     }});
-    try{await owner.browser.start();await owner.browser.navigate(target);owner.active=true;owner.starting=false;emit(owner,'started',{mode:d.mode,started:owner.started});const frame=await owner.browser.frame();emit(owner,'frame',frame);return send(res,200,snapshot(owner));}
+    try{await owner.browser.start();await owner.browser.navigate(target);owner.active=true;owner.starting=false;emit(owner,'started',{mode:d.mode,started:owner.started});const frame=await owner.browser.frame();emit(owner,'frame',frame);return send(res,200,{...snapshot(owner),frame});}
     catch(e){await stop(owner,e.message);throw e;}
    }
    if(u.pathname==='/api/stop'){if(owner.starting)return send(res,409,{error:'Trình duyệt đang khởi động. Chờ mở xong rồi kết thúc.'});await stop(owner);return send(res,200,snapshot(owner));}
@@ -85,7 +85,7 @@ export function createCloudApp({Browser=RemoteBrowser,maxSessions=limit(process.
    if(u.pathname==='/api/action'){
     if(!owner.active)throw new Error('Chưa có phiên trình duyệt đang chạy.');await owner.browser.action(d);return send(res,200,{ok:true});
    }
-   if(u.pathname==='/api/frame'){if(!owner.active)throw new Error('Phiên chưa mở.');emit(owner,'frame',await owner.browser.frame());return send(res,200,{ok:true});}
+   if(u.pathname==='/api/frame'){if(!owner.active)throw new Error('Phiên chưa mở.');const frame=await owner.browser.frame();emit(owner,'frame',frame);return send(res,200,{ok:true,frame});}
    if(u.pathname==='/api/ai'){
     if(owner.mode!=='cdp-ai'||!process.env.OPENROUTER_API_KEY)throw new Error('Chọn phương án CDP + AI và cấu hình OpenRouter trước.');
     if(owner.aiBusy||Date.now()-(owner.aiAt??0)<10000)return send(res,429,{error:'Chờ ít nhất 10 giây giữa hai lần gọi AI.'});owner.aiBusy=true;owner.aiAt=Date.now();
