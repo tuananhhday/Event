@@ -58,8 +58,20 @@ export class RemoteBrowser{
   if(method==='Page.windowOpen')this.emit('log',{message:'Website đã yêu cầu mở tab mới. Dùng nút Danh sách tab để chuyển sang tab đó.'});
  }
  async updateMeta(){try{const r=await this.control.send('Runtime.evaluate',{expression:'JSON.stringify({url:location.href,title:document.title})',returnByValue:true});const d=JSON.parse(r.result?.value??'{}');this.lastMeta={url:redactUrl(d.url??''),title:String(redact(d.title??'')).slice(0,200)};this.emit('page',this.lastMeta);}catch{}}
- async frame(){const r=await this.control.send('Page.captureScreenshot',{format:'jpeg',quality:65,captureBeyondViewport:false});return{data:r.data,width:1280,height:800};}
- async navigate(url){await this.control.send('Page.navigate',{url:await this.validateURL(url)});}
+ async frame(){
+  // Navigation can temporarily detach the renderer, including between redirects.
+  // Retry only that transient error; a dead browser or other CDP failure must surface.
+  const deadline=Date.now()+5000;
+  while(!this.closed){
+   try{const r=await this.control.send('Page.captureScreenshot',{format:'jpeg',quality:65,captureBeyondViewport:false});return{data:r.data,width:1280,height:800};}
+   catch(error){if(!/Not attached to an active page/.test(error.message)||Date.now()>=deadline)throw error;await delay(100);}
+  }
+  throw new Error('Phiên trình duyệt đã kết thúc.');
+ }
+ async navigate(url){
+  const result=await this.control.send('Page.navigate',{url:await this.validateURL(url)});
+  if(result.errorText)throw new Error(`Không mở được website: ${result.errorText}. Kiểm tra địa chỉ, kết nối mạng hoặc quyền truy cập website.`);
+ }
  async action(a){
   const c=this.control;
   if(!c||this.closed)throw new Error('Phiên trình duyệt đã kết thúc.');
