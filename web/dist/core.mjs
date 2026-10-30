@@ -184,7 +184,7 @@ function payloadLookup(payload,path,vendor){
   }
   if(vendor==='INSIDER'){
     const clean=path.replace(/^value\.0\./,'').replace(/^(event_parameters|event_params)\./,'').replace(/^(custom_parameters|default_parameters)\./,'').replace(/^(custom|default)\./,'');
-    const paths=[clean,`event_params.${clean}`,`event_parameters.${clean}`,`event_parameters.custom.${clean}`,`event_parameters.default.${clean}`,`custom_parameters.${clean}`,`default_parameters.${clean}`,`event_params.c_${clean}`,`event_params.custom.${clean}`,`event_params.default.${clean}`];
+    const paths=[`value.0.${path}`,`value.0.event_parameters.custom.${clean}`,`value.0.event_parameters.default.${clean}`,clean,`event_params.${clean}`,`event_parameters.${clean}`,`event_parameters.custom.${clean}`,`event_parameters.default.${clean}`,`custom_parameters.${clean}`,`default_parameters.${clean}`,`event_params.c_${clean}`,`event_params.custom.${clean}`,`event_params.default.${clean}`];
     for(const p of paths){const found=get(payload,p);if(found.exists)return found;}
   }
   return{exists:false};
@@ -208,36 +208,37 @@ export function inspectEvents(events,duplicateMs=1000){
     seen.set(signature,e);
   }return events;
 }
-export function compare(events,specs){
+export function compare(events,specs,{live=false}={}){
   const used=new Set(),rows=[];
   for(const spec of specs){for(const [ruleIndex,rule] of spec.rules.entries()){
     const vendor=sourceOf(rule.source)??spec.vendor;
-    const candidates=events.filter(e=>e.name===rule.event_name&&(!vendor||e.vendor===vendor));
+    const candidates=events.filter(e=>e.name===rule.event_name&&(!vendor||e.vendor===vendor)&&(!live||e.layer===rule.layer));
     const base={id:`${spec.id}:${ruleIndex}`,spec,name:rule.event_name,vendor:vendor??'ANY',flow:spec.flow,matches:candidates.length,eventIds:candidates.map(e=>e.id),issues:[],checks:[],inferred:spec.inferred};
     candidates.forEach(e=>used.add(e.id));
-    if(rule.layer==='JS_QUEUE'){rows.push({...base,status:'REVIEW',issues:['HAR không quan sát được JS_QUEUE / dataLayer / InsiderQueue.']});continue;}
+    if(rule.layer==='JS_QUEUE'&&!live){rows.push({...base,status:'REVIEW',issues:['HAR không quan sát được JS_QUEUE / dataLayer / InsiderQueue.']});continue;}
     if(spec.parseWarning||spec.needs_review){rows.push({...base,status:'REVIEW',issues:[spec.parseWarning||'Rule chưa được duyệt trong file đặc tả.']});continue;}
-    if(!candidates.length){rows.push({...base,status:rule.count?.min===0?'PASS':'MISSING',issues:rule.count?.min===0?[]:['Chưa quan sát thấy trong HAR đã nhập. Chỉ xác nhận lỗi khi đã thực hiện luồng tương ứng.']});continue;}
+    if(!candidates.length){rows.push({...base,status:rule.count?.min===0?'PASS':'MISSING',issues:rule.count?.min===0?[]:[live?'Chưa quan sát thấy trong phạm vi phiên đang chọn. Chỉ xác nhận lỗi khi đã thực hiện luồng tương ứng.':'Chưa quan sát thấy trong HAR đã nhập. Chỉ xác nhận lỗi khi đã thực hiện luồng tương ứng.']});continue;}
     if(spec.flow){const possibleSameName=specs.filter(s=>s!==spec&&s.rules.some(r=>r.event_name===rule.event_name)&&(!spec.vendor||!s.vendor||spec.vendor===s.vendor)&&s.flow!==spec.flow);if(possibleSameName.length){const flowToken=normalize(spec.flow);const matchingFlow=candidates.filter(e=>normalize(JSON.stringify(e.payload)+' '+e.page).includes(flowToken));if(matchingFlow.length)base.eventIds=matchingFlow.map(e=>e.id);else{rows.push({...base,status:'REVIEW',issues:['Tên event dùng ở nhiều luồng; chưa xác định được luồng từ payload hoặc URL.']});continue;}}}
     const selected=candidates.filter(e=>base.eventIds.includes(e.id));base.matches=selected.length;
     if(rule.count&&(selected.length<rule.count.min||selected.length>rule.count.max))base.issues.push(`Số lần ${selected.length} ngoài khoảng ${rule.count.min}–${rule.count.max}.`);
     let needsReview=false;
     for(const e of selected){
+      if(live&&e.layer==='TRACKING_REQUEST'&&e.status===null){needsReview=true;base.issues.push(`${e.id}: Đang chờ phản hồi mạng.`);}
       if(!e.decoded){needsReview=true;base.issues.push(`${e.id}: body chưa được giải mã.`);}
-      if(e.status===0||e.status>=400)base.issues.push(`${e.id}: HTTP ${e.status||'không có phản hồi'}.`);
+      if((!live||e.layer==='TRACKING_REQUEST')&&(e.status===0||e.status>=400))base.issues.push(`${e.id}: HTTP ${e.status||'không có phản hồi'}.`);
       for(const[path,field]of Object.entries(rule.fields??{})){
         const actual=payloadLookup(e.payload,path,e.vendor),status=testField(field,actual);
         base.checks.push({eventId:e.id,path,expected:expectedLabel(field),actual:actual.exists?actual.value:'[THIẾU]',status});
         if(status==='FAIL')base.issues.push(`${path}: ${actual.exists?'Giá trị / kiểu dữ liệu không khớp.':'Thiếu trường.'}`);if(status==='REVIEW')needsReview=true;
       }
     }
-    if(rule.after||rule.within_ms!==undefined){needsReview=true;base.issues.push('Rule có thứ tự / thời gian theo bước; HAR không có mốc bắt đầu bước để xác nhận.');}
+    if(rule.after||rule.within_ms!==undefined){needsReview=true;base.issues.push(live?'Rule thứ tự / thời gian theo bước cần kiểm tra thủ công trong phiên web.':'Rule có thứ tự / thời gian theo bước; HAR không có mốc bắt đầu bước để xác nhận.');}
     const fieldCount=Object.keys(rule.fields??{}).length;if(!fieldCount){needsReview=true;base.issues.push('Đặc tả chưa có trường để đối chiếu; mới xác nhận được tên event.');}
     base.issues=[...new Set(base.issues)];rows.push({...base,status:base.issues.some(s=>s.includes('HTTP ')||s.includes('ngoài khoảng')||s.includes('Thiếu trường')||s.includes('không khớp'))?'FAIL':needsReview?'REVIEW':'PASS'});
   }}
-  if(specs.length)for(const e of events)if(!used.has(e.id))rows.push({id:`extra:${e.id}`,name:e.name,vendor:e.vendor,flow:'',status:'EXTRA',matches:1,eventIds:[e.id],checks:[],issues:['Event chưa có dòng đối chiếu trong đặc tả đã nhập.'],inferred:false});
+  if(specs.length)for(const e of events)if((!live||specs.some(s=>s.rules.some(r=>r.layer===e.layer)))&&!used.has(e.id))rows.push({id:`extra:${e.id}`,name:e.name,vendor:e.vendor,flow:'',status:'EXTRA',matches:1,eventIds:[e.id],checks:[],issues:['Event chưa có dòng đối chiếu trong đặc tả đã nhập.'],inferred:false});
   return rows;
 }
 export function csv(rows){return '\uFEFF'+rows.map(row=>row.map(v=>{let s=typeof v==='object'?JSON.stringify(v):String(v??'');if(/^[=+@\-\t\r]/.test(s))s="'"+s;return'"'+s.replace(/"/g,'""')+'"';}).join(',')).join('\r\n');}
 export function reportData(events,comparisons,meta={}){return{schema_version:VERSION,generated_at:new Date().toISOString(),scope:'HAR tracking requests only; HTTP success does not confirm vendor ingestion.',...meta,events,comparisons};}
-export function bugMarkdown(rows){const bugs=rows.filter(r=>r.status==='FAIL');return'# Event Tracking QA · Báo cáo sai lệch\n\n'+(bugs.length?bugs.map((r,i)=>`## BUG-${String(i+1).padStart(3,'0')} · ${r.name}\n\n- Nền tảng: ${r.vendor}\n- Luồng: ${r.flow||'Chưa chỉ định'}\n- Đặc tả: ${r.spec?.provenance?.file??'—'}, dòng ${r.spec?.provenance?.row??'—'}\n- Evidence: ${r.eventIds.join(', ')}\n\n${r.issues.map(x=>'- '+x).join('\n')}\n`).join('\n'):'Chưa có sai lệch được xác nhận.\n')+'\n## Phạm vi\n\nChưa thấy event không tự động được tính là lỗi. HAR không chứng minh event đã được vendor tiếp nhận và không quan sát được JS queue.\n';}
+export function bugMarkdown(rows,{live=false}={}){const bugs=rows.filter(r=>r.status==='FAIL');return'# Event Tracking QA · Báo cáo sai lệch\n\n'+(bugs.length?bugs.map((r,i)=>`## BUG-${String(i+1).padStart(3,'0')} · ${r.name}\n\n- Nền tảng: ${r.vendor}\n- Luồng: ${r.flow||'Chưa chỉ định'}\n- Đặc tả: ${r.spec?.provenance?.file??'—'}, dòng ${r.spec?.provenance?.row??'—'}\n- Evidence: ${r.eventIds.join(', ')}\n\n${r.issues.map(x=>'- '+x).join('\n')}\n`).join('\n'):'Chưa có sai lệch được xác nhận.\n')+'\n## Phạm vi\n\nChưa thấy event không tự động được tính là lỗi. '+(live?'Bằng chứng JS queue và request được thu từ trình duyệt test trên máy chủ. HTTP thành công không xác nhận vendor ingestion.\n':'HAR không chứng minh event đã được vendor tiếp nhận và không quan sát được JS queue.\n');}

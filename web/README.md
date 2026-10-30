@@ -1,4 +1,4 @@
-# Event Tracking QA — Web edition
+# Event Tracking QA — HAR dự phòng
 
 Bản web dùng được ngay trên Chrome/Edge, không cần cài Node, Python hoặc extension trên máy sử dụng. Dữ liệu HAR và đặc tả được xử lý trong tab trình duyệt; ứng dụng không gửi file lên backend và không có API key.
 
@@ -11,16 +11,11 @@ Bản web dùng được ngay trên Chrome/Edge, không cần cài Node, Python 
 - Vào Tổng quan → chọn HAR → chọn Excel/CSV/JSON đặc tả nếu có → Bắt đầu kiểm tra.
 - Đóng hoặc tải lại tab sẽ mất phiên. Tải báo cáo trước khi đóng. Phiên không lưu localStorage.
 
-## Deploy lên Render từ repository này
+## Deploy riêng công cụ HAR lên Render
 
 Mã nguồn đã nằm trong `web/` của repository [tuananhhday/Event](https://github.com/tuananhhday/Event). Bản deploy trên Render là website tĩnh, truy cập qua URL công khai, không dùng cổng đăng nhập ChatGPT.
 
-### Cách 1 — Dùng Blueprint có sẵn
-
-1. Mở [Render Dashboard](https://dashboard.render.com/), chọn **New → Blueprint**.
-2. Kết nối repository `tuananhhday/Event`, branch mặc định của repo.
-3. Dùng file `render.yaml` ở **gốc repository**. File đã chọn `runtime: static`, thư mục xuất bản `./web/dist` và bỏ qua cài dependency.
-4. Kiểm tra cấu hình rồi deploy. Dùng URL `onrender.com` do Render trả về để chia sẻ cho mọi người.
+**Luồng web live hiện nằm ở `cloud/`, dùng Docker Web Service theo [README_LIVE.md](../README_LIVE.md). File `render.yaml` ở gốc đã đổi sang live.** Phần dưới chỉ áp dụng nếu muốn giữ một Static Site HAR riêng.
 
 ### Cách 2 — Tạo Static Site thủ công
 
@@ -80,4 +75,4 @@ Giới hạn mỗi HAR 60 MB, đặc tả 20 MB; workbook có giới hạn giả
 
 Nếu máy phát triển có Node: `npm test` chạy kiểm thử parser/rules; `npm run bundle` tạo lại HTML độc lập. Node chỉ dành cho người phát triển, không phải điều kiện sử dụng web.
 
-Bản web dùng schema và cách giải mã tương thích với các trường phổ biến trong bản gốc Event-Tracking. Các chế độ CDP/AI/Proxy ở thư mục gốc là ứng dụng chạy trên máy có Node; chúng không được thực thi bởi Render Static Site.
+Bản web dùng schema và cách giải mã tương thích với các trường phổ biến trong bản gốc Event-Tracking. Các chế độ local ở thư mục gốc vẫn cần Node. Bản live mới trong `cloud/` đưa collector lên máy chủ Docker; Render Static Site không thực thi các collector đó.

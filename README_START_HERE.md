@@ -1,64 +1,29 @@
-# Bắt đầu từ gói mã nguồn đầy đủ
+# Bắt đầu: Event QA Live
 
-Gói này gồm **toàn bộ 74 file được theo dõi trong bản gốc Event-Tracking**, cộng **bản web mới** và cấu hình deploy Render. Không cần cài Node để upload mã nguồn bằng trình duyệt hoặc sử dụng bản web trên Render.
+**Muốn mở website test ngay trong công cụ:** deploy bản `cloud/` dưới dạng **Docker Web Service**, theo [README_LIVE.md](README_LIVE.md).
 
-Nguồn: [tuananhhday/Event-Tracking](https://github.com/tuananhhday/Event-Tracking), commit `c98e0c88795cd07b15988e7de06fd39d80f25451`. Các file tải từ nguồn đã được kiểm tra đúng Git blob SHA. Xem `UPSTREAM_SOURCE.json`.
+Luồng sử dụng: nhập URL → chọn CDP/CDP + AI/Proxy → mở trình duyệt test → thao tác và xem event → đối chiếu đặc tả → xuất báo cáo. Người truy cập không cần cài Node trên máy.
 
-## 1. Đưa toàn bộ lên repo mới bằng trình duyệt
+Render Static Site đang dùng không chạy được trình duyệt trên máy chủ; hãy tạo Web Service mới từ cùng repo.
 
-1. Giải nén ZIP. Mở **bên trong** thư mục `Event-Complete`.
-2. Mở repository mới: [tuananhhday/Event](https://github.com/tuananhhday/Event).
-3. Với repo trống, chọn **uploading an existing file**. Với repo đã có file, chọn **Add file → Upload files**.
-4. Chọn tất cả file/thư mục **bên trong** `Event-Complete`, kéo thả vào trang upload và chờ hoàn tất.
-5. Kiểm tra ở gốc repo xuất hiện `README.md`, `render.yaml`, `src/`, `web/`, `solutions/` cùng các file/thư mục còn lại.
-6. Nhập commit message, ví dụ `Add original Event Tracking and browser web edition`, rồi commit vào nhánh mặc định.
+## Cập nhật repo hiện có
 
-Gói có ít hơn 100 file nên nằm trong giới hạn 100 file mỗi lượt upload của GitHub web. Mỗi file nhỏ hơn 25 MiB. Đưa **nội dung đã giải nén** lên repo sẽ giữ cấu trúc thư mục để Render tìm thấy `render.yaml` và `web/dist/index.html`.
+Trong `Event_QA_Live_Update.zip`:
 
-Tài liệu: [GitHub — Upload files](https://docs.github.com/en/repositories/working-with-files/managing-files/adding-a-file-to-a-repository).
+- `UPLOAD_UPDATE/`: file mới/thay đổi để cập nhật repo `tuananhhday/Event`. Kéo **nội dung bên trong** lên **Add file → Upload files**, rồi commit.
+- `FULL_SOURCE/`: toàn bộ mã nguồn sau sửa để giữ lại hoặc tạo repo khác.
+- `HUONG_DAN_CAP_NHAT.md`: hướng dẫn upload và cấu hình Render.
 
-## 2. Deploy web công khai trên Render
+Không upload cả hai thư mục vào cùng repo. Sau cập nhật, `Dockerfile` và `render.yaml` phải ở gốc, bên cạnh `cloud/`, `src/`, `web/`.
 
-### Dùng Blueprint
-
-1. Mở [Render Dashboard](https://dashboard.render.com/), chọn **New → Blueprint**.
-2. Kết nối repo mới `tuananhhday/Event` và chọn đúng nhánh chứa mã nguồn.
-3. Dùng `render.yaml` ở gốc repo. Cấu hình có `runtime: static` và `staticPublishPath: ./web/dist`.
-4. Review cấu hình rồi deploy. Dùng URL `onrender.com` Render trả về để chia sẻ.
-
-### Tạo Static Site thủ công
-
-Chọn **New → Static Site**, kết nối repo mới và nhập:
-
-| Trường | Giá trị |
+| Vị trí | Công dụng |
 |---|---|
-| Branch | Nhánh chứa code, thường là `main` |
-| Root Directory | `web` |
-| Build Command | `echo ready` |
-| Publish Directory | `dist` |
-| Environment variable | `SKIP_INSTALL_DEPS=true` |
+| `cloud/` | Backend phiên test, trình duyệt từ xa và giao diện live |
+| `Dockerfile`, `render.yaml` | Chromium/mitmproxy và cấu hình Render Web Service |
+| `web/` | Công cụ HAR dự phòng, xử lý file trong tab |
+| `src/`, `solutions/`, `proxy/`, `scripts/`, `test/`, `tests/` | Ứng dụng local và các collector gốc |
+| `UPSTREAM_SOURCE.json` | Hash của 74 file tại commit nguồn gốc, trước các thay đổi tích hợp |
 
-Bản web không cần API key, database hoặc Start Command. Người dùng mở URL Render để dùng, không phải đăng nhập ChatGPT. Dữ liệu file được xử lý riêng trong tab mỗi người và không gửi lên backend.
+Nguồn: `tuananhhday/Event-Tracking`, commit `c98e0c88795cd07b15988e7de06fd39d80f25451`. Không bao gồm lịch sử Git, dependency đã cài, khóa API, profile hoặc dữ liệu test riêng.
 
-Tài liệu: [Render Static Sites](https://render.com/docs/static-sites), [Blueprint YAML](https://render.com/docs/blueprint-spec).
-
-## 3. Trong gói có những phần nào?
-
-| Vị trí | Nội dung |
-|---|---|
-| `src/`, `solutions/`, `proxy/`, `scripts/`, `test/`, `tests/` | Mã nguồn và test của bản gốc: CDP không AI, CDP + AI, Proxy. |
-| `examples/`, `docs/`, `deep-research-report.md` | Case mẫu và tài liệu gốc. |
-| `package.json`, `package-lock.json`, các file `.cmd` | Cấu hình và lệnh chạy ứng dụng gốc trên máy có Node. |
-| `web/dist/` | Website để deploy lên Render hoặc static hosting. |
-| `web/Event_Tracking_QA_Standalone.html` | Bản web đã nhúng CSS/JS, mở bằng Chrome/Edge để dùng offline. |
-| `web/scripts/`, `web/tests/`, `web/package.json` | Công cụ tạo HTML độc lập và 16 kiểm thử cho bản web. |
-| `render.yaml` | Cấu hình Render Blueprint cho bản web. |
-| `UPSTREAM_SOURCE.json` | Commit nguồn và hash của 74 file gốc. |
-
-## 4. Phạm vi sử dụng
-
-Bản web phân tích HAR, nhập đặc tả Excel/CSV/JSON, xem event và xuất báo cáo. Bản web không tự bắt event từ tab website khác. Các chế độ thu thập CDP/AI/Proxy vẫn cần chạy trên máy có Node và môi trường phù hợp theo README gốc.
-
-Đây là bản chụp mã nguồn để tạo repo mới; không bao gồm lịch sử Git, `node_modules`, môi trường Python, khóa API hay dữ liệu `runs/` không được theo dõi trong repo gốc. Với ứng dụng gốc, cài dependency và cấu hình riêng trước khi chạy; với website trên Render, người truy cập không cần cài các thành phần đó.
-
-Kiểm thử web nếu máy phát triển có Node: `npm --prefix web test`. Tạo lại HTML độc lập: `npm --prefix web run bundle`.
+**Tiếp theo:** đọc README_LIVE, cập nhật GitHub, tạo Docker Web Service và smoke test. Mã nguồn này chưa được push/deploy thay cho bạn.

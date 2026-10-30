@@ -1,16 +1,16 @@
 # Event Tracking QA
 
-**Gói đầy đủ:** toàn bộ mã nguồn bản gốc + bản web mới. Đọc [README_START_HERE.md](README_START_HERE.md) để tải lên GitHub và deploy Render.
+**Bản web live mới:** nhập URL, mở website ngay trong công cụ, thao tác và thu event tự động trên máy chủ. Máy người sử dụng không cần cài Node.
 
-## Bản web công khai trên Render — không cần cài Node
+Đọc **[README_LIVE.md](README_LIVE.md)** để cập nhật GitHub và deploy **Docker Web Service** trên Render. `render.yaml` và `Dockerfile` đã đổi sang cấu hình live. Static Site cũ chỉ phân tích HAR.
 
-Mã nguồn bản web nằm trong [web/](web/README.md). Người dùng mở URL Render, nhập HAR và đặc tả Excel/CSV/JSON, xem event, đối chiếu và tải báo cáo. File được xử lý trong tab trình duyệt; không cần đăng nhập ChatGPT hoặc cấu hình API key.
+| Phần | Cách sử dụng |
+|---|---|
+| `cloud/` | Web live: trình duyệt từ xa, CDP/CDP + AI/Proxy, event, mốc thao tác, đối chiếu và báo cáo |
+| `web/` | Phân tích HAR dự phòng, mở tại `/offline/` trong service live |
+| Ứng dụng local bên dưới | Chạy trên máy có Node/Chrome theo hướng dẫn gốc |
 
-**Deploy nhanh:** trên Render chọn **New → Blueprint**, kết nối repository này và dùng [render.yaml](render.yaml) ở gốc repo. Hoặc tạo **Static Site** với branch `main`, Root Directory `web`, Build Command `echo ready`, Publish Directory `dist`, biến môi trường `SKIP_INSTALL_DEPS=true`.
-
-Xem [hướng dẫn deploy Render](web/README.md#deploy-lên-render-từ-repository-này). Bản web phân tích HAR; ba chế độ CDP/AI/Proxy bên dưới vẫn chạy trên máy có Node và trình duyệt test.
-
-Kiểm thử phần web: `npm --prefix web test`. Tạo lại HTML độc lập: `npm --prefix web run bundle`.
+Kiểm tra cloud + HAR: `npm run test:cloud`. Chạy cloud trên máy phát triển có Chromium: `npm run cloud`. Hướng dẫn ứng dụng local bên dưới được giữ để tham khảo và không phải quy trình sử dụng Render.
 
 ---
 

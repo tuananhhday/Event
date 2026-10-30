@@ -1,0 +1,30 @@
+{
+  "base_repository": "tuananhhday/Event",
+  "base_reference": "6103504b730dfb771fb0556a9123f9d917767536",
+  "description": "Full source and additive/replacement update; no deletions required. Browser automation runtime has not been verified in Docker.",
+  "changed_files": [
+    ".dockerignore",
+    ".env.example",
+    ".gitignore",
+    "CLOUD_VALIDATION.md",
+    "Dockerfile",
+    "README.md",
+    "README_LIVE.md",
+    "README_START_HERE.md",
+    "cloud/browser.mjs",
+    "cloud/public/demo.html",
+    "cloud/public/index.html",
+    "cloud/public/live.css",
+    "cloud/public/live.mjs",
+    "cloud/security.mjs",
+    "cloud/server.mjs",
+    "cloud/tests/live.test.mjs",
+    "package.json",
+    "render.yaml",
+    "web/.gitignore",
+    "web/Event_Tracking_QA_Standalone.html",
+    "web/README.md",
+    "web/dist/Event_Tracking_QA_Standalone.html",
+    "web/dist/core.mjs"
+  ]
+}

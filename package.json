@@ -3,8 +3,10 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "Local Event Tracking QA: CDP, optional OpenRouter, and mitmproxy",
-  "engines": { "node": ">=24.0.0" },
+  "description": "Event Tracking QA: local modes and cloud remote-browser web app",
+  "engines": {
+    "node": ">=24.0.0"
+  },
   "scripts": {
     "start": "node src/cli.mjs serve",
     "cdp": "node src/cli.mjs serve --mode cdp",
@@ -16,7 +18,10 @@
     "smoke:proxy:https": "node scripts/proxy-smoke.mjs --https",
     "smoke:ai": "node --env-file=.env scripts/ai-smoke.mjs",
     "test": "node --test",
-    "check": "node scripts/check.mjs"
+    "check": "node scripts/check.mjs",
+    "cloud": "node cloud/server.mjs",
+    "dev": "node cloud/server.mjs",
+    "test:cloud": "node --test cloud/tests/live.test.mjs web/tests/core.test.mjs"
   },
   "dependencies": {
     "ajv": "^8.17.1",

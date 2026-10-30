@@ -1,16 +1,13 @@
 services:
   - type: web
-    name: event-tracking-qa-web
-    runtime: static
-    buildCommand: echo ready
-    staticPublishPath: ./web/dist
+    name: event-qa-live
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    plan: free
+    healthCheckPath: /health
     envVars:
-      - key: SKIP_INSTALL_DEPS
-        value: "true"
-    headers:
-      - path: /*
-        name: X-Content-Type-Options
-        value: nosniff
-      - path: /*
-        name: Referrer-Policy
-        value: no-referrer
+      - key: MAX_SESSIONS
+        value: "1"
+      - key: SESSION_IDLE_MINUTES
+        value: "15"
