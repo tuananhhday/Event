@@ -50,3 +50,16 @@ test('start and refresh return the owner image directly without an SSE stream',a
   assert.notEqual((await f.request('frame',{})).status,200);
  }finally{await f.close();}
 });
+
+test('browser termination reason is retained in the session log',async()=>{
+ const f=await fixture();
+ try{
+  await f.request('start',{mode:'cdp',demo:true});
+  const owner=[...f.app.owners.values()][0];
+  owner.browser.opts.emit('browserClosed',{reason:'Chromium bị hệ thống dừng (SIGKILL). Kiểm tra memory limit trong log máy chủ.'});
+  await new Promise(resolve=>setImmediate(resolve));
+  const state=(await f.request('state')).data;
+  assert.equal(state.active,false);
+  assert.ok(state.logs.some(log=>log.message.includes('SIGKILL')));
+ }finally{await f.close();}
+});

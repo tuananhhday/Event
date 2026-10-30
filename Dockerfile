@@ -10,7 +10,7 @@ WORKDIR /app
 COPY . .
 RUN useradd --create-home --uid 10001 eventqa && chown -R eventqa:eventqa /app
 USER eventqa
-ENV NODE_ENV=production PORT=10000 CHROME_PATH=/usr/bin/chromium MITMDUMP_PATH=/opt/proxy/bin/mitmdump CHROME_NO_SANDBOX=1 MAX_SESSIONS=1
+ENV NODE_ENV=production PORT=10000 CHROME_PATH=/usr/bin/chromium MITMDUMP_PATH=/opt/proxy/bin/mitmdump CHROME_NO_SANDBOX=1 MAX_SESSIONS=1 NODE_OPTIONS=--max-old-space-size=128
 EXPOSE 10000
 ENTRYPOINT ["/usr/bin/tini", "--"]
 CMD ["node", "cloud/server.mjs"]

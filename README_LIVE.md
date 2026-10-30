@@ -44,6 +44,10 @@ Hoặc chọn **New → Blueprint**, dùng `render.yaml` ở gốc; file đã kh
 
 Không cần AI để mở website hoặc thu event. Chromium/mitmproxy dùng nhiều bộ nhớ hơn website tĩnh. Cấu hình miễn phí trong Blueprint dùng thử ban đầu, chưa bảo đảm đủ tài nguyên cho mọi website; nếu hết bộ nhớ, kiểm tra log và tài nguyên trước khi thay đổi gói hoặc số phiên.
 
+Nếu Render báo **memory limit / out of memory**, hãy dùng **CDP không AI** với một phiên trước. Chế độ Proxy chạy thêm mitmproxy nên cần nhiều RAM hơn. Bản Docker giới hạn heap Node ở 128 MiB, ảnh ở mật độ 1× và bộ đệm Network của collector cloud ở 8 MiB; các giới hạn này không giới hạn tổng RAM của Chromium. Website nhiều tab/iframe hoặc nội dung nặng vẫn có thể vượt gói 512 MiB. Khi đó cần gói có nhiều RAM hơn (bắt đầu thử từ 1 GiB) hoặc chạy local; không thể bảo đảm mọi website hoạt động trên gói miễn phí bằng thay đổi giao diện.
+
+Sau deploy, mở `/health`: trường `version` lấy bảy ký tự đầu của `RENDER_GIT_COMMIT` để kiểm tra phiên bản đang chạy. `SIGKILL` của Chromium được ghi vào nhật ký phiên; cần đối chiếu log Render để xác nhận có phải hết bộ nhớ hay không.
+
 ## 3. Thao tác hằng ngày
 
 1. Nhập URL đầy đủ, chọn **CDP không AI** và vendor, bấm **Mở trình duyệt test**. Có thể thử **Trang demo** trước.

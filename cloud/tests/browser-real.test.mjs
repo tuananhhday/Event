@@ -69,9 +69,9 @@ for(const mode of ['cdp',...(findProxy()?['proxy']:[])])test(`live UI ${mode}: c
   `});
   await viewer.control.send('Emulation.setDeviceMetricsOverride',{width:1600,height:1000,deviceScaleFactor:1,mobile:false});
   await viewer.navigate(origin);
-  await waitFor('document.querySelector("#connection").classList.contains("online") && !document.querySelector("#demo").disabled','UI ready');
+  await waitFor('document.querySelector("#connection")?.classList.contains("online") && !document.querySelector("#demo").disabled','UI ready');
   await evaluate(`document.querySelector('input[name=mode][value=${mode}]').click();document.querySelector('#demo').click()`);
-  await waitFor('!document.querySelector("#frame").hidden && document.querySelector("#frame").naturalWidth===1920','first image arrives over HTTP');
+  await waitFor('document.querySelector("#frame")?.naturalWidth===1280 && !document.querySelector("#frame").hidden','first image arrives over HTTP');
   await waitFor('document.querySelector("#session-title").textContent.includes("Đang thu thập")','session active');
   assert.ok(await evaluate('document.querySelector("#frame").getBoundingClientRect().width>1100'),'browser takes most of the desktop width');
   const normalWidth=await evaluate('document.querySelector("#frame").getBoundingClientRect().width');
@@ -106,7 +106,7 @@ for(const mode of ['cdp',...(findProxy()?['proxy']:[])])test(`live UI ${mode}: c
   await viewer.control.send('Emulation.setDeviceMetricsOverride',{width:390,height:844,deviceScaleFactor:1,mobile:true});
   assert.equal(await evaluate('document.documentElement.scrollWidth<=innerWidth'),true,'mobile controls do not overflow');
   await viewer.control.send('Page.reload');
-  await waitFor('!document.querySelector("#frame").hidden && document.querySelector("#frame").naturalWidth===1920','reload restores active session image without SSE frames');
+  await waitFor('document.querySelector("#frame")?.naturalWidth===1280 && !document.querySelector("#frame").hidden','reload restores active session image without SSE frames');
   assert.equal([...app.owners.values()].filter(o=>o.active).length,1,'reload reuses the same session');
  }finally{await viewer.stop();await app.close();}
 });

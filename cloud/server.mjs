@@ -20,12 +20,12 @@ export function createCloudApp({Browser=RemoteBrowser,maxSessions=limit(process.
  const send=(res,code,body,type='application/json')=>{res.writeHead(code,{'Content-Type':type,'Cache-Control':'no-store','X-Content-Type-Options':'nosniff','Referrer-Policy':'no-referrer'});res.end(type==='application/json'?JSON.stringify(body):body);};
  const emit=(owner,type,data)=>{if(type==='log'){owner.logs.push({time:new Date().toISOString(),...data});owner.logs=owner.logs.slice(-80);}const body=`event: ${type}\ndata: ${JSON.stringify(data)}\n\n`;for(const stream of owner.streams){if(stream.destroyed){owner.streams.delete(stream);continue;}if(stream.writableLength<1500000)stream.write(body);}};
  const snapshot=o=>({active:o.active,starting:o.starting,stopped:o.stopped??false,mode:o.mode??null,page:o.browser?.lastMeta??null,events:o.events,logs:o.logs,marks:o.marks??[],started:o.started??null});
- const stop=async(owner,reason='Bạn đã kết thúc phiên.')=>{owner.active=false;owner.starting=false;await owner.browser?.stop();owner.browser=null;owner.stopped=true;emit(owner,'stopped',{reason});};
+ const stop=async(owner,reason='Bạn đã kết thúc phiên.')=>{owner.active=false;owner.starting=false;await owner.browser?.stop();owner.browser=null;owner.stopped=true;emit(owner,'log',{message:reason});emit(owner,'stopped',{reason});};
  async function json(req){const chunks=[];let size=0;for await(const c of req){size+=c.length;if(size>100000)throw new Error('Yêu cầu quá lớn.');chunks.push(c);}try{return JSON.parse(Buffer.concat(chunks).toString()||'{}');}catch{throw new Error('JSON không hợp lệ.');}}
  const server=http.createServer(async(req,res)=>{
   try{
    const u=new URL(req.url,'http://localhost');
-   if(u.pathname==='/health')return send(res,200,{ok:!shuttingDown});
+   if(u.pathname==='/health')return send(res,200,{ok:!shuttingDown,version:process.env.RENDER_GIT_COMMIT?.slice(0,7)??null});
    if(u.pathname==='/demo'||u.pathname==='/demo/')return send(res,200,await readFile(path.join(root,'cloud/public/demo.html')),'text/html;charset=utf-8');
    if(u.pathname==='/demo/g/collect'||u.pathname==='/demo/insider/api/event/')return send(res,204,'','text/plain');
    if(req.method==='GET'&&!u.pathname.startsWith('/api/')){
@@ -74,7 +74,7 @@ export function createCloudApp({Browser=RemoteBrowser,maxSessions=limit(process.
       }
       if(owner.events.length>=10000){if(!owner.full){owner.full=true;emit(owner,'log',{message:'Đã đạt 10.000 event. Kết thúc và xuất báo cáo trước khi bắt đầu phiên mới.'});}return;}
       const e=normalizeEvent(data,++owner.index);owner.events.push(e);if(data.network?.request_id){const indices=lastEventKey.get(key)??[];indices.push(owner.events.length-1);lastEventKey.set(key,indices);}emit(owner,'event',e);
-     }else if(type==='browserClosed'){void stop(owner,'Trình duyệt đã đóng. Bạn có thể xuất dữ liệu hoặc mở phiên mới.');}
+     }else if(type==='browserClosed'){void stop(owner,data.reason??'Trình duyệt đã đóng. Bạn có thể xuất dữ liệu hoặc mở phiên mới.');}
      else emit(owner,type,data);
     }});
     try{await owner.browser.start();await owner.browser.navigate(target);owner.active=true;owner.starting=false;emit(owner,'started',{mode:d.mode,started:owner.started});const frame=await owner.browser.frame();emit(owner,'frame',frame);return send(res,200,{...snapshot(owner),frame});}

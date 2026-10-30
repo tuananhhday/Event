@@ -29,18 +29,18 @@ export class RemoteBrowser{
    const args=['--headless=new','--disable-dev-shm-usage','--no-first-run','--no-default-browser-check','--disable-background-networking','--disable-component-update',`--remote-debugging-port=${this.port}`,'--remote-debugging-address=127.0.0.1',`--user-data-dir=${path.join(this.dir,'profile')}`,'--window-size=1280,800',...proxyArgs];
    if(process.env.CHROME_NO_SANDBOX==='1')args.push('--no-sandbox');args.push('about:blank');
    this.child=spawn(executable,args,{stdio:'ignore'});let spawnError;this.child.once('error',e=>spawnError=e);
-   let target;for(let n=0;n<60&&!this.closed;n++){if(spawnError)throw spawnError;if(this.child.exitCode!==null)throw new Error('Chromium đã thoát. Kiểm tra cấu hình Docker và RAM máy chủ.');try{[target]=await listTargets(this.port);}catch{}if(target)break;await delay(150);}
+   let target;for(let n=0;n<60&&!this.closed;n++){if(spawnError)throw spawnError;if(this.child.exitCode!==null||this.child.signalCode)throw new Error(`Chromium đã thoát (${this.child.signalCode??this.child.exitCode}). Kiểm tra memory limit và log máy chủ.`);try{[target]=await listTargets(this.port);}catch{}if(target)break;await delay(150);}
    if(!target)throw new Error('Chromium không mở được cổng điều khiển.');
    this.control=new CDPConnection(target.webSocketDebuggerUrl);await this.control.connect();
    this.control.on('event',m=>void this.protocolEvent(m).catch(e=>this.emit('log',{message:e.message})));
    await this.control.send('Page.enable');await this.control.send('Runtime.enable');
-   // Keep pointer coordinates in CSS pixels while capturing denser screenshots.
-   await this.control.send('Emulation.setDeviceMetricsOverride',{width:1280,height:800,deviceScaleFactor:1.5,mobile:false});
+   // Keep the 1280×800 viewport at native density: 1.5× uses 2.25× the pixel buffers.
+   await this.control.send('Emulation.setDeviceMetricsOverride',{width:1280,height:800,deviceScaleFactor:1,mobile:false});
    await this.control.send('Fetch.enable',{patterns:[{urlPattern:'*',requestStage:'Request'}]});
    await this.control.send('Page.setInterceptFileChooserDialog',{enabled:true});
-   if(this.mode!=='proxy'){this.collector=new CDPCollector({port:this.port,endpointPatterns:this.patterns,onEvent:e=>this.emit('event',redact(e)),onStatus:message=>this.emit('log',{message})});await this.collector.start();}
-   await this.control.send('Page.startScreencast',{format:'jpeg',quality:85,maxWidth:1920,maxHeight:1200,everyNthFrame:1});
-   this.child.once('exit',()=>{if(!this.closed)this.emit('browserClosed',{});});
+   if(this.mode!=='proxy'){this.collector=new CDPCollector({port:this.port,networkBufferBytes:8*1024*1024,endpointPatterns:this.patterns,onEvent:e=>this.emit('event',redact(e)),onStatus:message=>this.emit('log',{message})});await this.collector.start();}
+   await this.control.send('Page.startScreencast',{format:'jpeg',quality:80,maxWidth:1280,maxHeight:800,everyNthFrame:2});
+   this.child.once('exit',(code,signal)=>{if(!this.closed)this.emit('browserClosed',{reason:signal==='SIGKILL'?'Chromium bị hệ thống dừng (SIGKILL). Kiểm tra memory limit trong log máy chủ.':`Chromium đã đóng (${signal??code}).`});});
    this.metaTimer=setInterval(()=>void this.updateMeta(),1500);await this.updateMeta();
   }catch(e){await this.stop();throw e;}
  }
@@ -64,7 +64,7 @@ export class RemoteBrowser{
   // Retry only that transient error; a dead browser or other CDP failure must surface.
   const deadline=Date.now()+5000;
   while(!this.closed){
-   try{const r=await this.control.send('Page.captureScreenshot',{format:'jpeg',quality:85,captureBeyondViewport:false});return{data:r.data,width:1280,height:800};}
+   try{const r=await this.control.send('Page.captureScreenshot',{format:'jpeg',quality:80,captureBeyondViewport:false});return{data:r.data,width:1280,height:800};}
    catch(error){if(!/Not attached to an active page/.test(error.message)||Date.now()>=deadline)throw error;await delay(100);}
   }
   throw new Error('Phiên trình duyệt đã kết thúc.');
@@ -92,7 +92,7 @@ export class RemoteBrowser{
    await c.send('Input.dispatchMouseEvent',{type:'mousePressed',button:'left',buttons:1,clickCount:a.count===2?2:1,x,y});return c.send('Input.dispatchMouseEvent',{type:'mouseReleased',button:'left',buttons:0,clickCount:a.count===2?2:1,x,y});
   }
   if(a.type==='dialog')return c.send('Page.handleJavaScriptDialog',{accept:!!a.accept,promptText:String(a.text??'').slice(0,1000)});
-  if(a.type==='tab'){const target=(await listTargets(this.port)).find(t=>t.id===a.id);if(!target)throw new Error('Tab không còn tồn tại.');await this.validateURL(target.url);await c.send('Page.stopScreencast').catch(()=>{});c.close();this.control=new CDPConnection(target.webSocketDebuggerUrl);await this.control.connect();this.control.on('event',m=>void this.protocolEvent(m).catch(()=>{}));await this.control.send('Page.enable');await this.control.send('Runtime.enable');await this.control.send('Fetch.enable',{patterns:[{urlPattern:'*',requestStage:'Request'}]});await this.control.send('Emulation.setDeviceMetricsOverride',{width:1280,height:800,deviceScaleFactor:1.5,mobile:false});await this.control.send('Page.startScreencast',{format:'jpeg',quality:85,maxWidth:1920,maxHeight:1200});return;}
+  if(a.type==='tab'){const target=(await listTargets(this.port)).find(t=>t.id===a.id);if(!target)throw new Error('Tab không còn tồn tại.');await this.validateURL(target.url);await c.send('Page.stopScreencast').catch(()=>{});c.close();this.control=new CDPConnection(target.webSocketDebuggerUrl);await this.control.connect();this.control.on('event',m=>void this.protocolEvent(m).catch(()=>{}));await this.control.send('Page.enable');await this.control.send('Runtime.enable');await this.control.send('Fetch.enable',{patterns:[{urlPattern:'*',requestStage:'Request'}]});await this.control.send('Emulation.setDeviceMetricsOverride',{width:1280,height:800,deviceScaleFactor:1,mobile:false});await this.control.send('Page.startScreencast',{format:'jpeg',quality:80,maxWidth:1280,maxHeight:800});return;}
   throw new Error('Thao tác không được hỗ trợ.');
  }
  async tabs(){return(await listTargets(this.port)).map(t=>({id:t.id,title:String(redact(t.title)),url:redactUrl(t.url)}));}

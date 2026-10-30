@@ -132,11 +132,11 @@ export function queueEvents(record) {
 }
 
 export class CDPCollector {
-  constructor({ port = 9222, targetId, urlFilter, onEvent, onStatus = () => {}, endpointPatterns = DEFAULT_ENDPOINT_PATTERNS } = {}) {
+  constructor({ port = 9222, targetId, urlFilter, onEvent, onStatus = () => {}, endpointPatterns = DEFAULT_ENDPOINT_PATTERNS, networkBufferBytes } = {}) {
     if (typeof onEvent !== 'function') throw new Error('CDPCollector requires onEvent.');
     this.port = Number(port); this.targetId = targetId; this.urlFilter = urlFilter;
     this.onEvent = onEvent; this.onStatus = onStatus;
-    this.patterns = endpointPatterns; this.discovered = new Map();
+    this.patterns = endpointPatterns; this.networkBufferBytes = networkBufferBytes; this.discovered = new Map();
     this.connections = new Map(); this.attaching = new Map(); this.activeConnections = new Set(); this.jobs = new Set(); this.running = false; this.generation = 0;
   }
   #status(message) { try { this.onStatus(message); } catch { /* UI callbacks do not break capture. */ } }
@@ -210,7 +210,7 @@ export class CDPCollector {
     const send = (method, params) => this.running && generation === this.generation ? state.connection.send(method, params, sessionId) : Promise.reject(new Error('CDP collector stopped.'));
     await send('Runtime.addBinding', { name: '__eventqa_emit' });
     await send('Runtime.enable');
-    await send('Network.enable', { maxPostDataSize: 1048576 });
+    await send('Network.enable', { maxPostDataSize: 1048576, ...(this.networkBufferBytes ? {maxTotalBufferSize:this.networkBufferBytes,maxResourceBufferSize:1048576} : {}) });
     await send('Page.enable');
     let script;
     try { script = await send('Page.addScriptToEvaluateOnNewDocument', { source: INJECT_JS, runImmediately: true }); }
